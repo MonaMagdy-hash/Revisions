@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Angle Checker</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<style>
+  * {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 20px;
+  font-weight: bold;
+  font-style: italic;
+}
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: center;
+    background: #f8f9fa;
+    padding: 20px;
+  }
+  h2 {
+    font-size: 28px;
+    color: #8d0618;
+    margin-bottom: 15px;
+  }
+  label {
+    font-weight: bold;
+    margin-right: 10px;
+    color: rgb(117, 25, 145);
+  }
+  .Da{
+    color: rgb(12, 114, 63);
+  }
+  select, input, button {
+    margin: 5px;
+    padding: 8px 12px;
+    font-size: 16px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+  }
+  #map { height: 400px; width: 80%; margin: 20px 0; border-radius: 10px; box-shadow: 0 0 8px rgba(0,0,0,0.2);}
+  #progressContainer {
+    width: 80%;
+    background: #ddd;
+    border-radius: 5px;
+    margin: 10px 0;
+    height: 20px;
+    overflow: hidden;
+  }
+  #progressBar {
+    height: 100%;
+    width: 0%;
+    background: #28a745;
+    text-align: center;
+    color: white;
+    font-size: 13px;
+    line-height: 20px;
+    transition: width 0.4s ease;
+  }
+button {
+  background: linear-gradient(to bottom, #6CFF8C 0%, #4CAF50 100%);
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  box-shadow: 0 6px 10px rgba(0,0,0,0.3);
+  position: relative;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(120deg, rgba(255,255,255,0.6), rgba(255,255,255,0));
+  transform: skewX(-25deg);
+  transition: all 0.5s ease;
+}
+button:hover::before {
+  left: 100%;
+}
+button:active {
+  box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+  transform: translateY(3px);
+}
+  table {
+    margin-top: 20px;
+    border-collapse: collapse;
+    width: 80%;
+    background: #fff;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  th, td {
+    padding: 10px;
+    border: 1px solid #ddd;
+  }
+  th {
+    background: #007BFF;
+    color: white;
+  }
+</style>
+</head>
+<body>
+<h2>Angle Checker</h2>
+
+<label for="selectedCountry">Countries:</label>
+<select id="selectedCountry">
+  <option value="" disabled selected hidden>Choose</option>
+  <option value="DZ">Algeria</option>
+  <option value="BH">Bahrain</option>
+  <option value="CE">Ceuta</option>
+  <option value="TD">Chad</option>
+  <option value="DJ">Djibouti</option>
+  <option value="EG">Egypt</option>
+  <option value="JO">Jordan</option>
+  <option value="KW">Kuwait</option>
+  <option value="LB">Lebanon</option>
+  <option value="LY">Libya</option>
+  <option value="MR">Mauritania</option>
+  <option value="ML">Melilla</option>
+  <option value="MA">Morocco</option>
+  <option value="OM">Oman</option>
+  <option value="QA">Qatar</option>
+  <option value="SD">Sudan</option>
+  <option value="SY">Syria</option>
+  <option value="TN">Tunisia</option>
+  <option value="AE">United Arab Emirates</option>
+  <option value="EH">Western Sahara</option>
+  <option value="YE">Yemen</option>
+</select>
+
+<label for="selectedUser">Users:</label>
+<select id="selectedUser">
+  <option value="" disabled selected hidden>Choose</option>
+  <option value="nona mostafa">nona mostafa</option>
+  <option value="little_maper">little_maper</option>
+  <option value="Princess_Aurora">Princess_Aurora</option>
+  <option value="salma_z">salma_z</option>
+  <option value="Eslam_Elsayed">Eslam_Elsayed</option>
+  <option value="Amany_Ahmed">Amany_Ahmed</option>
+  <option value="Merna_mahmoud">Merna_mahmoud</option>
+  <option value="Aya Samir">Aya Samir</option>
+  <option value="Mohamed_Taha">Mohamed_Taha</option>
+  <option value="mona_magdy">mona_magdy</option>
+  <option value="salma_ayman">salma_ayman</option>
+  <option value="mariem_mohamed">mariem_mohamed</option>
+  <option value="mona_mohsen">mona_mohsen</option>
+  <option value="shery1">shery1</option>
+  <option value="mohamedd_ahmed">mohamedd_ahmed</option>
+</select>
+
+<label for="selectedDate" class="Da">Date:</label>
+<input type="date" id="selectedDate" />
+<div id="progressContainer"><div id="progressBar">0%</div></div>
+
+<div id="map"></div>
+<button id="run">Run</button>
+<a id="download" style="display:none;">Download the file</a>
+<pre id="output"></pre>
+
+<table id="resultsTable" style="display:none;">
+  <thead>
+    <tr>
+      <th>Way 1 ID</th>
+      <th>Way 2 ID</th>
+      <th>The Angle</th>
+      <th>Classification Ways</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+const highwayGroups = {
+    residential: {maxAngle: 29, color:'blue'},
+    "unclassified": {maxAngle: 39, color:'green'},
+    tertiary: {maxAngle: 39, color:'orange'},
+    secondary: {maxAngle: 39, color:'purple'},
+    primary: {maxAngle: 39, color:'red'},
+    trunk: {maxAngle: 39, color:'brown'},
+    motorway: {maxAngle: 39, color:'black'}
+};
+
+const allowedUsers = [
+  'nona mostafa','little_maper','Princess_Aurora','salma_z','Eslam_Elsayed',
+  'Amany_Ahmed','Merna_mahmoud','Aya Samir','Mohamed_Taha','mona_magdy',
+  'salma_ayman','mariem_mohamed','mona_mohsen','shery1','mohamedd_ahmed'
+];
+
+const allowedNodeNames = [
+  "شارع الخليج", "شارع الشيخ زايد", "شارع الاتحاد"
+];
+
+function toDeg(rad) { return rad * 180 / Math.PI; }
+function calculateAngle(p0, p1, p2){
+    const dx1=p1[0]-p0[0], dy1=p1[1]-p0[1];
+    const dx2=p2[0]-p0[0], dy2=p2[1]-p0[1];
+    const dot = dx1*dx2 + dy1*dy2;
+    const mag1=Math.sqrt(dx1*dx1 + dy1*dy1);
+    const mag2=Math.sqrt(dx2*dx2 + dy2*dy2);
+    if(mag1==0 || mag2==0) return 180;
+    return toDeg(Math.acos(dot/(mag1*mag2)));
+}
+
+const map = L.map('map').setView([25.21, 55.27], 15);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+function getAdjacentNode(way, nodeId){
+    const idx = way.nodes.indexOf(nodeId);
+    if(idx === -1) return null;
+    if(idx === 0) return way.nodes[1];
+    else if(idx === way.nodes.length-1) return way.nodes[idx-1];
+    else return way.nodes[idx-1];
+}
+const progressBar = document.getElementById("progressBar");
+const resultsTable = document.getElementById("resultsTable");
+const tbody = resultsTable.querySelector("tbody");
+
+document.getElementById("run").onclick = async () => {
+    const output = document.getElementById("output");
+    const dateInput = document.getElementById("selectedDate").value;
+    const selectedUser = document.getElementById("selectedUser").value;
+    const selectedCountry = document.getElementById("selectedCountry").value;
+    if(!dateInput){
+        alert("A date must be selected");
+        return;
+    }
+        if (!selectedUser) { 
+        alert("User must be selected");
+        return;
+    }
+        if (!selectedCountry) { 
+        alert("A country must be selected");
+        return;
+    }
+    progressBar.style.width = '15%';
+    progressBar.textContent = 'Data loading...';
+
+    const calculated_date = dateInput + "T05:00:00Z";
+
+    output.textContent = "Data is being loaded from OSM...";
+
+    const userFilter = `user()=='${selectedUser}'`;
+    const areaFilter = `["ISO3166-1"~"${selectedCountry}"]`;
+    const highwayFilter = '["highway"~"motorway|residential|unclassified|trunk|primary|construction|secondary|tertiary|_link"][!junction]';
+
+    const noUTurnQuery = `
+[out:json][timeout:300];
+area${areaFilter};
+relation["type"="restriction"]["restriction"="no_u_turn"](area);
+out body;
+>;
+out skel qt;
+`;
+    const noUTurnResp = await fetch("https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(noUTurnQuery));
+    const noUTurnData = await noUTurnResp.json();
+    const noUTurnNodes = new Set();
+    for(const rel of noUTurnData.elements){
+        if(rel.type==="relation" && rel.members){
+            for(const m of rel.members){
+                if(m.type==="node") noUTurnNodes.add(m.ref);
+            }
+        }
+    }
+progressBar.style.width = '40%';
+progressBar.textContent = 'Roads are being brought in...';
+
+    const overpassQuery = `
+[out:json][timeout:300];
+area${areaFilter};
+(
+  way${highwayFilter}(area)(newer:"${calculated_date}")(if:${userFilter});
+);
+out body;
+>;
+out skel qt;
+`;
+    const url = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(overpassQuery);
+    const resp = await fetch(url);
+    const data = await resp.json();
+
+    const nodes = {};
+    const ways = [];
+    const nodeWaysMap = {};
+
+    for(const el of data.elements){
+        if(el.type=="node") nodes[el.id] = {coords:[el.lon, el.lat], tags:el.tags};
+        else if(el.type=="way"){
+            ways.push(el);
+            for(const nid of el.nodes){
+                if(!nodeWaysMap[nid]) nodeWaysMap[nid]=[];
+                nodeWaysMap[nid].push(el);
+            }
+        }
+    }
+progressBar.style.width = '70%';
+progressBar.textContent = 'Data analysis is underway...';
+
+    const results=[];
+    for(const n in nodeWaysMap){
+        if(noUTurnNodes.has(parseInt(n))) continue;
+
+        const wayList=nodeWaysMap[n];
+        if(wayList.length<3) continue;
+
+        const validWays = wayList.filter(w=>{
+            if(!w.tags || !w.tags.highway) return false;
+            return highwayGroups[w.tags.highway]!==undefined;
+        });
+        if(validWays.length<3) continue;
+
+        const onewayWays = validWays.filter(w=>w.tags && w.tags.oneway==="yes");
+        const nonOnewayWays = validWays.filter(w=>!w.tags || w.tags.oneway!=="yes");
+        if(onewayWays.length<2 || nonOnewayWays.length<1) continue;
+
+        let foundOpposite=false, wayA, wayB;
+        for(let i=0;i<onewayWays.length;i++){
+            for(let j=i+1;j<onewayWays.length;j++){
+                const w1=onewayWays[i], w2=onewayWays[j];
+                const idx1=w1.nodes.indexOf(parseInt(n)), idx2=w2.nodes.indexOf(parseInt(n));
+                if(idx1===-1 || idx2===-1) continue;
+                const w1_start=w1.nodes[0], w1_end=w1.nodes[w1.nodes.length-1];
+                const w2_start=w2.nodes[0], w2_end=w2.nodes[w2.nodes.length-1];
+                if((w1_start==n && w2_end==n)||(w1_end==n && w2_start==n)){
+                    foundOpposite=true; wayA=w1; wayB=w2; break;
+                }
+            }
+            if(foundOpposite) break;
+        }
+        if(!foundOpposite) continue;
+
+        const wayC=nonOnewayWays[0];
+
+        let maxAngleA = highwayGroups[wayA.tags.highway].maxAngle;
+        let maxAngleB = highwayGroups[wayB.tags.highway].maxAngle;
+        let maxAngle = Math.min(maxAngleA, maxAngleB);
+
+        const pA = nodes[getAdjacentNode(wayA, parseInt(n))].coords;
+        const pB = nodes[getAdjacentNode(wayB, parseInt(n))].coords;
+
+        const angle = calculateAngle(nodes[n].coords, pA, pB);
+        if(angle>maxAngle) continue;
+
+        const nodeName = nodes[n].tags?.name;
+        if(nodeName && !allowedNodeNames.includes(nodeName)) continue;
+
+        results.push({
+            node:n, way1:wayA.id, way2:wayB.id, way3:wayC.id,
+            angle:angle.toFixed(1), lat:nodes[n].coords[1], lon:nodes[n].coords[0],
+            wayA:wayA, wayB:wayB, wayC:wayC
+        });
+    }
+
+    progressBar.style.width = '90%';
+    progressBar.textContent = 'File creation is underway...';
+
+    if(results.length===0){
+        output.textContent="There is no contract that verifies the conditions in the specified area";
+        return;
+    }
+
+    output.textContent="It was found "+results.length+" node:\n"+
+        results.map(r=>`Node ${r.node}: Way ${r.way1}, Way ${r.way2} (oneway opposite), Way ${r.way3} without oneway → Angle=${r.angle}°`).join("\n");
+
+    results.forEach(r=>{
+        const latlng = [r.lat,r.lon];
+        L.circle(latlng, {radius:5, color:'black', fill:true, fillOpacity:0.8})
+         .bindPopup(`Node ${r.node}<br>Way ${r.way1}, Way ${r.way2}, Way ${r.way3}<br>Angle: ${r.angle}°`)
+         .addTo(map);
+
+        const coordsA = [nodes[getAdjacentNode(r.wayA, parseInt(r.node))].coords, latlng];
+        const coordsB = [nodes[getAdjacentNode(r.wayB, parseInt(r.node))].coords, latlng];
+        L.polyline([[coordsA[0][1], coordsA[0][0]], [coordsA[1][0], coordsA[1][1]]], {color:highwayGroups[r.wayA.tags.highway].color}).addTo(map);
+        L.polyline([[coordsB[0][1], coordsB[0][0]], [coordsB[1][0], coordsB[1][1]]], {color:highwayGroups[r.wayB.tags.highway].color}).addTo(map);
+
+        const coordsC = [nodes[getAdjacentNode(r.wayC, parseInt(r.node))].coords, latlng];
+        L.polyline([[coordsC[0][1], coordsC[0][0]], [coordsC[1][0], coordsC[1][1]]], {color:'gray', dashArray:'4,4'}).addTo(map);
+    });
+
+let osmXML = '<?xml version="1.0" encoding="UTF-8"?><osm version="0.6" generator="Angle Checker">\n';
+
+for (const r of results) {
+  osmXML += `<node id="${r.node}" version="1" lat="${r.lat}" lon="${r.lon}">\n`;
+  osmXML += `  <tag k="angle" v="${r.angle}"/>\n`;
+  osmXML += `  <tag k="ways" v="${r.way1},${r.way2},${r.way3}"/>\n`;
+  osmXML += `</node>\n`;
+}
+
+osmXML += "</osm>";
+
+
+
+    const blob=new Blob([osmXML],{type:"text/xml"});
+    const a=document.getElementById("download");
+    a.href=URL.createObjectURL(blob);
+    a.download = `Missing_Retraction_${selectedUser}.osm`;
+    a.style.display="inline";
+    a.textContent="Download OSM file";
+
+output.textContent="It was found "+results.length+" node.";
+
+
+tbody.innerHTML = '';
+results.forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.way1}</td><td>${r.way2}</td><td>${r.angle}°</td><td>${r.wayA.tags.highway} / ${r.wayB.tags.highway}</td>`;
+    tbody.appendChild(tr);
+
+    const latLngs = [
+        [r.wayA.nodes.map(id => nodes[id]).map(n => n.coords)], 
+        [r.wayB.nodes.map(id => nodes[id]).map(n => n.coords)]
+    ];
+
+    const polyline = L.polyline(latLngs, { color: 'blue', weight: 5 }).addTo(map);
+});
+
+    resultsTable.style.display='table';
+
+    progressBar.style.width = '100%';
+    progressBar.textContent = 'Done!';
+};
+</script>
+</body>
+</html>
