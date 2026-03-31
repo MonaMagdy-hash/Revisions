@@ -264,7 +264,7 @@ out body;
 >;
 out skel qt;
 `;
-    const noUTurnResp = await fetch("https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(noUTurnQuery));
+    const noUTurnResp = await fetch("https://maps.mail.ru/osm/tools/overpass/api/interpreter" + encodeURIComponent(noUTurnQuery));
     const noUTurnData = await noUTurnResp.json();
     const noUTurnNodes = new Set();
     for(const rel of noUTurnData.elements){
@@ -287,7 +287,7 @@ out body;
 >;
 out skel qt;
 `;
-    const url = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(overpassQuery);
+    const url = "https://maps.mail.ru/osm/tools/overpass/api/interpreter" + encodeURIComponent(overpassQuery);
     const resp = await fetch(url);
     const data = await resp.json();
 
