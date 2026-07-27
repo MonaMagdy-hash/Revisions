@@ -321,11 +321,11 @@ const overpassQuery = `
 [out:json][timeout:180];
 area${areaFilter};
 (
-  way${highwayFilter}(area)(newer:"${calculated_date}")${userFilter};
+  way${highwayFilter}(area)(newer:"${calculated_date}");
 );
-out body;
+out meta;
 >;
-out skel qt;
+out meta;
 `;
 
     const resp = await overpassFetch(overpassQuery);
@@ -352,16 +352,31 @@ try {
     const ways = [];
     const nodeWaysMap = {};
 
-    for(const el of data.elements){
-        if(el.type=="node") nodes[el.id] = {coords:[el.lon, el.lat], tags:el.tags};
-        else if(el.type=="way"){
-            ways.push(el);
-            for(const nid of el.nodes){
-                if(!nodeWaysMap[nid]) nodeWaysMap[nid]=[];
-                nodeWaysMap[nid].push(el);
-            }
+for (const el of data.elements) {
+
+    if (el.type === "node") {
+        nodes[el.id] = {
+            coords: [el.lon, el.lat],
+            tags: el.tags
+        };
+    }
+
+    else if (el.type === "way") {
+
+        if (el.user !== selectedUser)
+            continue;
+
+        ways.push(el);
+
+        for (const nid of el.nodes) {
+            if (!nodeWaysMap[nid])
+                nodeWaysMap[nid] = [];
+
+            nodeWaysMap[nid].push(el);
         }
     }
+}
+
 progressBar.style.width = '70%';
 progressBar.textContent = 'Data analysis is underway...';
 
