@@ -276,7 +276,24 @@ if (!resp.ok) {
     return;
 }
 
-const data = JSON.parse(text);
+if (!resp.ok) {
+    console.log("Overpass Error:", text);
+
+    alert("Overpass server is busy. Please try again in a minute.");
+
+    return;
+}
+
+let data;
+
+try {
+    data = JSON.parse(text);
+} catch (e) {
+    console.log(text);
+    alert("Overpass did not return valid JSON.");
+    return;
+}
+
 
 document.getElementById("run").onclick = async () => {
     const output = document.getElementById("output");
