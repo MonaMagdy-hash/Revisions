@@ -291,7 +291,7 @@ document.getElementById("run").onclick = async () => {
 
     output.textContent = "Data is being loaded from OSM...";
 
-    const userFilter = `user()="${selectedUser}"`;
+    const userFilter = `user()=="${selectedUser}"`;
     const areaFilter = `["ISO3166-1"="${selectedCountry}"]`;
     const highwayFilter = '["highway"~"motorway|residential|unclassified|trunk|primary|construction|secondary|tertiary|_link"][!junction]';
 
