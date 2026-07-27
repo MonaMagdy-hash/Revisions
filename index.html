@@ -228,6 +228,56 @@ const progressBar = document.getElementById("progressBar");
 const resultsTable = document.getElementById("resultsTable");
 const tbody = resultsTable.querySelector("tbody");
 
+async function overpassFetch(query) {
+
+    const servers = [
+        "https://overpass-api.de/api/interpreter",
+        "https://overpass.kumi.systems/api/interpreter",
+        "https://overpass.private.coffee/api/interpreter"
+    ];
+
+    for (const server of servers) {
+
+        try {
+
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 90000);
+
+            const response = await fetch(
+                server + "?data=" + encodeURIComponent(query),
+                { signal: controller.signal }
+            );
+
+            clearTimeout(timeout);
+
+            if (response.ok) {
+                return response;
+            }
+
+            if (response.status === 429) {
+                console.log("Rate limited:", server);
+                continue;
+            }
+
+        } catch(e) {
+            console.log("Server failed:", server, e);
+        }
+    }
+
+    throw new Error("All Overpass servers failed");
+}
+
+const resp = await overpassFetch(overpassQuery);
+const text = await resp.text();
+
+if (!resp.ok) {
+    console.log("Overpass Error:", text);
+    alert("Overpass server is busy, try again");
+    return;
+}
+
+const data = JSON.parse(text);
+
 document.getElementById("run").onclick = async () => {
     const output = document.getElementById("output");
     const dateInput = document.getElementById("selectedDate").value;
@@ -257,14 +307,14 @@ document.getElementById("run").onclick = async () => {
     const highwayFilter = '["highway"~"motorway|residential|unclassified|trunk|primary|construction|secondary|tertiary|_link"][!junction]';
 
     const noUTurnQuery = `
-[out:json][timeout:60];
+[out:json][timeout:90];
 area${areaFilter};
 relation["restriction"="no_u_turn"](area);
 out body;
 >;
 out skel qt;
 `;
-    const noUTurnResp = await fetch("https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(noUTurnQuery));
+    const noUTurnResp = await overpassFetch(noUTurnQuery);
     const noUTurnText = await noUTurnResp.text();
     const noUTurnData = JSON.parse(noUTurnText);
     const noUTurnNodes = new Set();
@@ -279,17 +329,16 @@ progressBar.style.width = '40%';
 progressBar.textContent = 'Roads are being brought in...';
 
     const overpassQuery = `
-[out:json][timeout:25];
+[out:json][timeout:90];
 area${areaFilter};
 (
-  way${highwayFilter}(area)(newer:"${calculated_date}")(if:${userFilter});
+  way${highwayFilter}(area)(newer:"${calculated_date}")(${userFilter});
 );
 out body;
 >;
 out skel qt;
 `;
-    const url = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(overpassQuery);
-    const resp = await fetch(url);
+    const resp = await overpassFetch(overpassQuery);
     const text = await resp.text();
 
 if (!resp.ok) {
