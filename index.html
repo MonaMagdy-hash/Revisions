@@ -291,7 +291,7 @@ document.getElementById("run").onclick = async () => {
 
     output.textContent = "Data is being loaded from OSM...";
 
-    const userFilter = `user()=="${selectedUser}"`;
+    const userFilter = `(user:"${selectedUser}")`;
     const areaFilter = `["ISO3166-1"="${selectedCountry}"]`;
     const highwayFilter = '["highway"~"motorway|residential|unclassified|trunk|primary|construction|secondary|tertiary|_link"][!junction]';
 
@@ -317,16 +317,17 @@ out skel qt;
 progressBar.style.width = '40%';
 progressBar.textContent = 'Roads are being brought in...';
 
-    const overpassQuery = `
+const overpassQuery = `
 [out:json][timeout:180];
 area${areaFilter};
 (
-  way${highwayFilter}(area)(newer:"${calculated_date}")(if:${userFilter});
+  way${highwayFilter}(area)(newer:"${calculated_date}")${userFilter};
 );
 out body;
 >;
 out skel qt;
 `;
+
     const resp = await overpassFetch(overpassQuery);
     const text = await resp.text();
 
