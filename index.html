@@ -319,12 +319,12 @@ document.getElementById("run").onclick = async () => {
 
     output.textContent = "Data is being loaded from OSM...";
 
-    const userFilter = `user()=='${selectedUser}'`;
+    const userFilter = `user()="${selectedUser}"`;
     const areaFilter = `["ISO3166-1"="${selectedCountry}"]`;
     const highwayFilter = '["highway"~"motorway|residential|unclassified|trunk|primary|construction|secondary|tertiary|_link"][!junction]';
 
     const noUTurnQuery = `
-[out:json][timeout:90];
+[out:json][timeout:180];
 area${areaFilter};
 relation["restriction"="no_u_turn"](area);
 out body;
@@ -346,10 +346,10 @@ progressBar.style.width = '40%';
 progressBar.textContent = 'Roads are being brought in...';
 
     const overpassQuery = `
-[out:json][timeout:90];
+[out:json][timeout:180];
 area${areaFilter};
 (
-  way${highwayFilter}(area)(newer:"${calculated_date}")(${userFilter});
+  way${highwayFilter}(area)(newer:"${calculated_date}")(if:${userFilter});
 );
 out body;
 >;
@@ -364,7 +364,16 @@ if (!resp.ok) {
     return;
 }
 
-    const data = JSON.parse(text);
+    let data;
+
+try {
+    data = JSON.parse(text);
+} catch(e) {
+    console.log("Overpass returned:", text);
+    alert("Overpass timeout or server error. Try again.");
+    return;
+}
+
 
     const nodes = {};
     const ways = [];
