@@ -267,34 +267,6 @@ async function overpassFetch(query) {
     throw new Error("All Overpass servers failed");
 }
 
-const resp = await overpassFetch(overpassQuery);
-const text = await resp.text();
-
-if (!resp.ok) {
-    console.log("Overpass Error:", text);
-    alert("Overpass server is busy, try again");
-    return;
-}
-
-if (!resp.ok) {
-    console.log("Overpass Error:", text);
-
-    alert("Overpass server is busy. Please try again in a minute.");
-
-    return;
-}
-
-let data;
-
-try {
-    data = JSON.parse(text);
-} catch (e) {
-    console.log(text);
-    alert("Overpass did not return valid JSON.");
-    return;
-}
-
-
 document.getElementById("run").onclick = async () => {
     const output = document.getElementById("output");
     const dateInput = document.getElementById("selectedDate").value;
