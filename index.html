@@ -248,24 +248,25 @@ document.getElementById("run").onclick = async () => {
     progressBar.style.width = '15%';
     progressBar.textContent = 'Data loading...';
 
-    const calculated_date = dateInput + "T05:00:00Z";
+    const calculated_date = dateInput + "T00:00:00Z";
 
     output.textContent = "Data is being loaded from OSM...";
 
     const userFilter = `user()=='${selectedUser}'`;
-    const areaFilter = `["ISO3166-1"~"${selectedCountry}"]`;
+    const areaFilter = `["ISO3166-1"="${selectedCountry}"]`;
     const highwayFilter = '["highway"~"motorway|residential|unclassified|trunk|primary|construction|secondary|tertiary|_link"][!junction]';
 
     const noUTurnQuery = `
-[out:json][timeout:300];
+[out:json][timeout:60];
 area${areaFilter};
-relation["type"="restriction"]["restriction"="no_u_turn"](area);
+relation["restriction"="no_u_turn"](area);
 out body;
 >;
 out skel qt;
 `;
     const noUTurnResp = await fetch("https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(noUTurnQuery));
-    const noUTurnData = await noUTurnResp.json();
+    const noUTurnText = await noUTurnResp.text();
+    const noUTurnData = JSON.parse(noUTurnText);
     const noUTurnNodes = new Set();
     for(const rel of noUTurnData.elements){
         if(rel.type==="relation" && rel.members){
@@ -278,7 +279,7 @@ progressBar.style.width = '40%';
 progressBar.textContent = 'Roads are being brought in...';
 
     const overpassQuery = `
-[out:json][timeout:300];
+[out:json][timeout:25];
 area${areaFilter};
 (
   way${highwayFilter}(area)(newer:"${calculated_date}")(if:${userFilter});
@@ -289,7 +290,15 @@ out skel qt;
 `;
     const url = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(overpassQuery);
     const resp = await fetch(url);
-    const data = await resp.json();
+    const text = await resp.text();
+
+if (!resp.ok) {
+    console.log("Overpass Error:", text);
+    alert("Overpass server is busy, try again");
+    return;
+}
+
+    const data = JSON.parse(text);
 
     const nodes = {};
     const ways = [];
@@ -346,6 +355,12 @@ progressBar.textContent = 'Data analysis is underway...';
         let maxAngleA = highwayGroups[wayA.tags.highway].maxAngle;
         let maxAngleB = highwayGroups[wayB.tags.highway].maxAngle;
         let maxAngle = Math.min(maxAngleA, maxAngleB);
+
+        const adjA = getAdjacentNode(wayA, parseInt(n));
+        const adjB = getAdjacentNode(wayB, parseInt(n));
+
+        if (!adjA || !adjB) continue;
+        if (!nodes[adjA] || !nodes[adjB]) continue;
 
         const pA = nodes[getAdjacentNode(wayA, parseInt(n))].coords;
         const pB = nodes[getAdjacentNode(wayB, parseInt(n))].coords;
@@ -405,7 +420,7 @@ osmXML += "</osm>";
     const blob=new Blob([osmXML],{type:"text/xml"});
     const a=document.getElementById("download");
     a.href=URL.createObjectURL(blob);
-    a.download = `Missing_Retraction_${selectedUser}.osm`;
+    a.download = `Missing_Restriction_${selectedUser}.osm`;
     a.style.display="inline";
     a.textContent="Download OSM file";
 
